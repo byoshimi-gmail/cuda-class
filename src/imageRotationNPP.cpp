@@ -155,39 +155,45 @@ int main(int argc, char *argv[])
         npp::ImageNPP_8u_C1 oDeviceSrc(oHostSrc);
 
         // create struct with the ROI size
-        NppiSize oSrcSize = {(int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
+        NppiRect oSrcSize = {0, 0, (int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
         NppiPoint oSrcOffset = {0, 0};
-        NppiSize oSizeROI = {(int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
+        NppiRect oSizeROI = {0, 0, (int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
 
         // Calculate the bounding box of the rotated image
         NppiRect oBoundingBox;
         double angle = 45.0; // Rotation angle in degrees
-        NPP_CHECK_NPP(nppiGetRotateBound(oSrcSize, angle, &oBoundingBox));
+        double aBoundingBox[2][2] = {
+            {0, 0},
+            {(double)oDeviceSrc.width(), (double)oDeviceSrc.height()}};
+    NPP_CHECK_NPP(nppiGetRotateBound(oSrcSize, aBoundingBox, angle, 0, 0));
 
-        // allocate device image for the rotated image
-        npp::ImageNPP_8u_C1 oDeviceDst(oBoundingBox.width, oBoundingBox.height);
+    // allocate device image for the rotated image
+    npp::ImageNPP_8u_C1 oDeviceDst(oBoundingBox.width, oBoundingBox.height);
 
-        // Set the rotation point (center of the image)
-        NppiPoint oRotationCenter = {(int)(oSrcSize.width / 2), (int)(oSrcSize.height / 2)};
+    // Set the rotation point (center of the image)
+    NppiPoint oRotationCenter = {(int)(oSrcSize.width / 2), (int)(oSrcSize.height / 2)};
 
-        // run the rotation
-        NPP_CHECK_NPP(nppiRotate_8u_C1R(
-            oDeviceSrc.data(), oSrcSize, oDeviceSrc.pitch(), oSrcOffset,
-            oDeviceDst.data(), oDeviceDst.pitch(), oBoundingBox, angle, oRotationCenter,
-            NPPI_INTER_NN));
+    NppiSize oSrcSizeSize = {(int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
+    NppiSize oSrcOffsetSize = {(int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
 
-        // declare a host image for the result
-        npp::ImageCPU_8u_C1 oHostDst(oDeviceDst.size());
-        // and copy the device result data into it
-        oDeviceDst.copyTo(oHostDst.data(), oHostDst.pitch());
+    // run the rotation
+    NPP_CHECK_NPP(nppiRotate_8u_C1R(
+        oDeviceSrc.data(), oSrcSizeSize, oDeviceSrc.pitch(), oSrcSize,
+        oDeviceDst.data(), oDeviceDst.pitch(), oBoundingBox, angle, oRotationCenter.x, oRotationCenter.y,
+        NPPI_INTER_NN));
 
-        saveImage(sResultFilename, oHostDst);
-        std::cout << "Saved image: " << sResultFilename << std::endl;
+    // declare a host image for the result
+    npp::ImageCPU_8u_C1 oHostDst(oDeviceDst.size());
+    // and copy the device result data into it
+    oDeviceDst.copyTo(oHostDst.data(), oHostDst.pitch());
 
-        nppiFree(oDeviceSrc.data());
-        nppiFree(oDeviceDst.data());
+    saveImage(sResultFilename, oHostDst);
+    std::cout << "Saved image: " << sResultFilename << std::endl;
 
-        exit(EXIT_SUCCESS);
+    nppiFree(oDeviceSrc.data());
+    nppiFree(oDeviceDst.data());
+
+    exit(EXIT_SUCCESS);
     }
     catch (npp::Exception &rException)
     {
