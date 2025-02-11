@@ -34,8 +34,10 @@
 # Define the compiler and flags
 NVCC = /usr/local/cuda/bin/nvcc
 CXX = g++
-CXXFLAGS = -std=c++11 -I/usr/local/cuda/include -Iinclude -ICommon -ICommon/UtilNPP
-LDFLAGS = -L/usr/local/cuda/lib64 -lcudart -lnppc -lnppial -lnppicc -lnppidei -lnppif -lnppig -lnppim -lnppist -lnppisu -lnppitc
+# CXXFLAGS = -std=c++11 -I/usr/local/cuda/include -Iinclude -ICommon -ICommon/UtilNPP
+CXXFLAGS = -ccbin g++ -I/usr/local/cuda/include -Iinclude -ICommon -ICommon/UtilNPP -m64 --threads 0 -gencode arch=compute_35,code=compute_35
+
+LDFLAGS = -L/usr/local/cuda/lib64 -lcudart -lnppc_static -lnppial_static -lnppicc_static -lnppidei_static -lnppif_static -lnppig_static -lnppim_static -lnppist_static -lnppisu_static -lnppitc_static -lfreeimage -lculibos
 
 # Define directories
 SRC_DIR = src
