@@ -31,6 +31,7 @@
 #
 ################################################################################
 
+
 # Define the compiler and flags
 NVCC = /usr/local/cuda/bin/nvcc
 CXX = g++
