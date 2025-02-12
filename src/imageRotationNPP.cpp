@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            sFilename = "Lena.pgm";
+            sFilename = "data/Lena-grey.pgm";
         }
 
         // if we specify the filename at the command line, then we only test
@@ -147,7 +147,9 @@ int main(int argc, char *argv[])
         }
 
         // declare a host image object for an 8-bit grayscale image
-        npp::ImageCPU_8u_C1 oHostSrc;
+        npp::ImageCPU_8u_C1 oHostSrc; // works for 8 bit grayscale
+        // Next line fails.  Common/UtilNPP/ImageIO.h loadImage only knows about grey-scale .pgm images.
+        // npp::ImageCPU_8u_C3 oHostSrc; // try 3 channel 8-bit unsigned color image (.bmp file)
         // load gray-scale image from disk
         npp::loadImage(sFilename, oHostSrc);
         // declare a device image and copy construct from the host image,
@@ -156,44 +158,48 @@ int main(int argc, char *argv[])
 
         // create struct with the ROI size
         NppiRect oSrcSize = {0, 0, (int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
-        NppiPoint oSrcOffset = {0, 0};
+        NppiPoint oSrcOffset = {(int)oDeviceSrc.width()/2, (int)oDeviceSrc.height()/2 };
         NppiRect oSizeROI = {0, 0, (int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
 
         // Calculate the bounding box of the rotated image
-        NppiRect oBoundingBox;
+
         double angle = 45.0; // Rotation angle in degrees
         double aBoundingBox[2][2] = {
             {0, 0},
             {(double)oDeviceSrc.width(), (double)oDeviceSrc.height()}};
-    NPP_CHECK_NPP(nppiGetRotateBound(oSrcSize, aBoundingBox, angle, 0, 0));
+        NppiRect oBoundingBox = {0, 0, (int)(aBoundingBox[1][0] - aBoundingBox[0][0]),
+                                 (int)(aBoundingBox[1][1] - aBoundingBox[0][1])};
+       
+        NPP_CHECK_NPP(nppiGetRotateBound(oSrcSize, aBoundingBox, angle, 0, 0));
 
-    // allocate device image for the rotated image
-    npp::ImageNPP_8u_C1 oDeviceDst(oBoundingBox.width, oBoundingBox.height);
+        // allocate device image for the rotated image
+        npp::ImageNPP_8u_C1 oDeviceDst(aBoundingBox[1][0] - aBoundingBox[0][0],
+                                       aBoundingBox[1][1] - aBoundingBox[0][1]);
 
-    // Set the rotation point (center of the image)
-    NppiPoint oRotationCenter = {(int)(oSrcSize.width / 2), (int)(oSrcSize.height / 2)};
+        // Set the rotation point (center of the image)
+        NppiPoint oRotationCenter = {(int)(oSrcSize.width / 2), (int)(oSrcSize.height / 2)};
 
-    NppiSize oSrcSizeSize = {(int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
-    NppiSize oSrcOffsetSize = {(int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
+        NppiSize oSrcSizeSize = {(int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
+        NppiSize oSrcOffsetSize = {(int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
 
-    // run the rotation
-    NPP_CHECK_NPP(nppiRotate_8u_C1R(
-        oDeviceSrc.data(), oSrcSizeSize, oDeviceSrc.pitch(), oSrcSize,
-        oDeviceDst.data(), oDeviceDst.pitch(), oBoundingBox, angle, oRotationCenter.x, oRotationCenter.y,
-        NPPI_INTER_NN));
+        // run the rotation
+        NPP_CHECK_NPP(nppiRotate_8u_C1R(
+            oDeviceSrc.data(), oSrcSizeSize, oDeviceSrc.pitch(), oSrcSize,
+            oDeviceDst.data(), oDeviceDst.pitch(), oBoundingBox, angle, oRotationCenter.x, oRotationCenter.y,
+            NPPI_INTER_NN));
 
-    // declare a host image for the result
-    npp::ImageCPU_8u_C1 oHostDst(oDeviceDst.size());
-    // and copy the device result data into it
-    oDeviceDst.copyTo(oHostDst.data(), oHostDst.pitch());
+        // declare a host image for the result
+        npp::ImageCPU_8u_C1 oHostDst(oDeviceDst.size());
+        // and copy the device result data into it
+        oDeviceDst.copyTo(oHostDst.data(), oHostDst.pitch());
 
-    saveImage(sResultFilename, oHostDst);
-    std::cout << "Saved image: " << sResultFilename << std::endl;
+        saveImage(sResultFilename, oHostDst);
+        std::cout << "Saved image: " << sResultFilename << std::endl;
 
-    nppiFree(oDeviceSrc.data());
-    nppiFree(oDeviceDst.data());
+        nppiFree(oDeviceSrc.data());
+        nppiFree(oDeviceDst.data());
 
-    exit(EXIT_SUCCESS);
+        exit(EXIT_SUCCESS);
     }
     catch (npp::Exception &rException)
     {
