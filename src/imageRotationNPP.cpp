@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
 
         // Calculate the bounding box of the rotated image
 
-        double angle = -16.0; // Rotation angle in degrees
+        double angle = -17.0; // Rotation angle in degrees
         double aBoundingBox[2][2] = {
             {0, 0},
             {(double)oDeviceSrc.width(), (double)oDeviceSrc.height()}};
