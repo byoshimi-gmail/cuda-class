@@ -158,12 +158,12 @@ int main(int argc, char *argv[])
 
         // create struct with the ROI size
         NppiRect oSrcSize = {0, 0, (int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
-        NppiPoint oSrcOffset = {(int)oDeviceSrc.width()/2, (int)oDeviceSrc.height()/2 };
+        NppiPoint oSrcOffset = {(int)oDeviceSrc.width(), (int)oDeviceSrc.height() };
         NppiRect oSizeROI = {0, 0, (int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
 
         // Calculate the bounding box of the rotated image
 
-        double angle = 45.0; // Rotation angle in degrees
+        double angle = 30.0; // Rotation angle in degrees
         double aBoundingBox[2][2] = {
             {0, 0},
             {(double)oDeviceSrc.width(), (double)oDeviceSrc.height()}};
@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
         // run the rotation
         NPP_CHECK_NPP(nppiRotate_8u_C1R(
             oDeviceSrc.data(), oSrcSizeSize, oDeviceSrc.pitch(), oSrcSize,
-            oDeviceDst.data(), oDeviceDst.pitch(), oBoundingBox, angle, oRotationCenter.x, oRotationCenter.y,
+            oDeviceDst.data(), oDeviceDst.pitch(), oBoundingBox, angle, 0, 0, // oRotationCenter.x, oRotationCenter.y,
             NPPI_INTER_NN));
 
         // declare a host image for the result
