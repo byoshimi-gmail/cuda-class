@@ -167,15 +167,19 @@ int main(int argc, char *argv[])
         double aBoundingBox[2][2] = {
             {0, 0},
             {(double)oDeviceSrc.width(), (double)oDeviceSrc.height()}};
-        NppiRect oBoundingBox = {0, 0, (int)(aBoundingBox[1][0] - aBoundingBox[0][0]),
-                                 (int)(aBoundingBox[1][1] - aBoundingBox[0][1])};
-       
-        NPP_CHECK_NPP(nppiGetRotateBound(oSrcSize, aBoundingBox, angle, 0, 0));
 
+        // NppiRect oBoundingBox = {0, 0, 2000, 1000};
+        double oBoundingBox[2][2];
+
+        NPP_CHECK_NPP(nppiGetRotateBound(oSrcSize, oBoundingBox, angle, 0, 0));
+        //NppiRect oBoundingBox = {0, 0, (int)(aBoundingBox[1][0] - aBoundingBox[0][0]),
+        //                         (int)(aBoundingBox[1][1] - aBoundingBox[0][1])};
         // allocate device image for the rotated image
-        npp::ImageNPP_8u_C1 oDeviceDst(aBoundingBox[1][0] - aBoundingBox[0][0],
-                                       aBoundingBox[1][1] - aBoundingBox[0][1]);
+        npp::ImageNPP_8u_C1 oDeviceDst(oBoundingBox[1][0] - oBoundingBox[0][0],
+                                       oBoundingBox[1][1] - oBoundingBox[0][1]);
 
+        NppiRect oBoundingRect = {(int)oBoundingBox[0][0], 0,
+            (int)oBoundingBox[1][0], (int)oBoundingBox[1][1] - (int)oBoundingBox[0][1]};
         // Set the rotation point (center of the image)
         NppiPoint oRotationCenter = {(int)(oSrcSize.width / 2), (int)(oSrcSize.height / 2)};
 
@@ -185,7 +189,7 @@ int main(int argc, char *argv[])
         // run the rotation
         NPP_CHECK_NPP(nppiRotate_8u_C1R(
             oDeviceSrc.data(), oSrcSizeSize, oDeviceSrc.pitch(), oSrcSize,
-            oDeviceDst.data(), oDeviceDst.pitch(), oBoundingBox, angle, 0, 0, // oRotationCenter.x, oRotationCenter.y,
+            oDeviceDst.data(), oDeviceDst.pitch(), oBoundingRect, angle, 0, 0, // oRotationCenter.x, oRotationCenter.y,
             NPPI_INTER_NN));
 
         // declare a host image for the result
