@@ -146,11 +146,11 @@ int main(int argc, char *argv[])
             sResultFilename = outputFilePath;
         }
 
+        // NOTE: this code only works for 8-bit grey scale.  npp::loadImage() defined in
+        // Common/UtilNPP/ImageIO.h   It only support 8-bit grey decoding.
+
         // declare a host image object for an 8-bit grayscale image
         npp::ImageCPU_8u_C1 oHostSrc; // works for 8 bit grayscale
-        // Next line fails.  Common/UtilNPP/ImageIO.h loadImage only knows about grey-scale .pgm images.
-        // npp::ImageCPU_8u_C3 oHostSrc; // try 3 channel 8-bit unsigned color image (.bmp file)
-        // load gray-scale image from disk
         npp::loadImage(sFilename, oHostSrc);
         // declare a device image and copy construct from the host image,
         // i.e. upload host to device
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
 
         // Calculate the bounding box of the rotated image
 
-        double angle = -17.0; // Rotation angle in degrees
+        double angle = 17.0; // Rotation angle in degrees
         double aBoundingBox[2][2] = {
             {0, 0},
             {(double)oDeviceSrc.width(), (double)oDeviceSrc.height()}};
@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
         NPP_CHECK_NPP(nppiRotate_8u_C1R(
             oDeviceSrc.data(), oSrcSizeSize, oDeviceSrc.pitch(), oSrcSize,
             oDeviceDst.data(), oDeviceDst.pitch(), oBoundingRect, angle,
-            -(int)oBoundingBox[0][0], 0, //
+            -(int)oBoundingBox[0][0], -(int)oBoundingBox[0][1], //
             // -(int)oBoundingBox[0][0], 0, // oRotationCenter.x, oRotationCenter.y,
             NPPI_INTER_NN));
 
