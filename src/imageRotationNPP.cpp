@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
 
         // Calculate the bounding box of the rotated image
 
-        double angle = 30.0; // Rotation angle in degrees
+        double angle = -16.0; // Rotation angle in degrees
         double aBoundingBox[2][2] = {
             {0, 0},
             {(double)oDeviceSrc.width(), (double)oDeviceSrc.height()}};
@@ -175,12 +175,12 @@ int main(int argc, char *argv[])
         //NppiRect oBoundingBox = {0, 0, (int)(aBoundingBox[1][0] - aBoundingBox[0][0]),
         //                         (int)(aBoundingBox[1][1] - aBoundingBox[0][1])};
         // allocate device image for the rotated image
-        // npp::ImageNPP_8u_C1 oDeviceDst(oBoundingBox[1][0] - oBoundingBox[0][0],
-        //                               oBoundingBox[1][1] - oBoundingBox[0][1]);
-         npp::ImageNPP_8u_C1 oDeviceDst(1500, 1000);
-        //NppiRect oBoundingRect = {(int)oBoundingBox[0][0], 0,
-        //    (int)oBoundingBox[1][0], (int)oBoundingBox[1][1] - (int)oBoundingBox[0][1]};
-        NppiRect oBoundingRect = {0, 0, 1500, 1000};
+        npp::ImageNPP_8u_C1 oDeviceDst(oBoundingBox[1][0] - oBoundingBox[0][0],
+                                       oBoundingBox[1][1] - oBoundingBox[0][1]);
+        //npp::ImageNPP_8u_C1 oDeviceDst(1200, 1001);
+        NppiRect oBoundingRect = {0, 0,
+                                  (int)oBoundingBox[1][0] - (int)oBoundingBox[0][0], (int)oBoundingBox[1][1] - (int)oBoundingBox[0][1]};
+        //NppiRect oBoundingRect = {0, 0, 1200, 1001};
         // Set the rotation point (center of the image)
         NppiPoint oRotationCenter = {(int)(oSrcSize.width / 2), (int)(oSrcSize.height / 2)};
 
@@ -190,7 +190,9 @@ int main(int argc, char *argv[])
         // run the rotation
         NPP_CHECK_NPP(nppiRotate_8u_C1R(
             oDeviceSrc.data(), oSrcSizeSize, oDeviceSrc.pitch(), oSrcSize,
-            oDeviceDst.data(), oDeviceDst.pitch(), oBoundingRect, angle, 0, 0, // oRotationCenter.x, oRotationCenter.y,
+            oDeviceDst.data(), oDeviceDst.pitch(), oBoundingRect, angle,
+            -(int)oBoundingBox[0][0], 0, //
+            // -(int)oBoundingBox[0][0], 0, // oRotationCenter.x, oRotationCenter.y,
             NPPI_INTER_NN));
 
         // declare a host image for the result
