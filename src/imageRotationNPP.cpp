@@ -38,6 +38,7 @@
 #include <ImagesNPP.h>
 
 #include <string.h>
+#include <math.h>
 #include <fstream>
 #include <iostream>
 
@@ -183,16 +184,19 @@ int main(int argc, char *argv[])
 
         // Maximal bounding box, at least for square case is 45 deg.
         // Better check would use sqrt(width^2 + height^2) as output width and height.
-        NPP_CHECK_NPP(nppiGetRotateBound(oSrcSize, oBoundingBox, 45.0/*angle*/, 0, 0));
+        double iDiagonal = sqrt((double)(oDeviceSrc.width() * oDeviceSrc.width()) +
+                                (oDeviceSrc.height() * oDeviceSrc.height()));
+        std::cout << "diagonal = " << iDiagonal << "\n";
+       
         NPP_CHECK_NPP(nppiGetRotateBound(oSrcSize, oRotatedBoundingBox, angle, 0, 0));
+        double oRotatedWidth = std::max(oRotatedBoundingBox[0][0] - oRotatedBoundingBox[1][0], oRotatedBoundingBox[1][0] - oRotatedBoundingBox[0][0]);
+        double oRotatedHeight = std::max(oRotatedBoundingBox[0][1] - oRotatedBoundingBox[1][1], oRotatedBoundingBox[1][1] - oRotatedBoundingBox[0][1]);
 
         // allocate device image for the rotated image
-        npp::ImageNPP_8u_C1 oDeviceDst(oBoundingBox[1][0] - oBoundingBox[0][0],
-                                       oBoundingBox[1][1] - oBoundingBox[0][1]);
+        // The "center" we'll be spinning around is (iDiagonal, iDiagonal), the center of oDeviceDst.
+        npp::ImageNPP_8u_C1 oDeviceDst(iDiagonal*2, iDiagonal*2);
 
-        NppiRect oBoundingRect = {0, 0,
-                                  (int)oBoundingBox[1][0] - (int)oBoundingBox[0][0],
-                                  (int)oBoundingBox[1][1] - (int)oBoundingBox[0][1]};
+        NppiRect oBoundingRect = {0, 0, (int)iDiagonal, (int)iDiagonal};
 
         NppiSize oSrcSizeSize = {(int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
         NppiSize oSrcOffsetSize = {(int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
@@ -200,14 +204,16 @@ int main(int argc, char *argv[])
         // run the rotation
         //for (angle = 5; angle < 360; angle+=5) {
         std::cout << "angle = " << angle << "\n";
-        std::cout << "output image x, y offsets = " << -(int)oBoundingBox[0][0] << ", " << -(int)oBoundingBox[0][1] << " - "
-                  << -(int)oBoundingBox[1][0] << ", " << -(int)oBoundingBox[1][1] << "\n";
         std::cout << "rotated x, y offsets = " << -(int)oRotatedBoundingBox[0][0] << ", " << -(int)oRotatedBoundingBox[0][1] << " - "
                   << -(int)oRotatedBoundingBox[1][0] << ", " << -(int)oRotatedBoundingBox[1][1] << "\n";
+
+        double oRotatedWidthOffset = (iDiagonal - oRotatedWidth) / 2;
+        double oRotatedHeightOffset = (iDiagonal - oRotatedHeight) / 2;
+        // int rWidthPad = (int)(oDevice)
         NPP_CHECK_NPP(nppiRotate_8u_C1R(
             oDeviceSrc.data(), oSrcSizeSize, oDeviceSrc.pitch(), oSrcSize,
             oDeviceDst.data(), oDeviceDst.pitch(), oBoundingRect, angle,
-            -(int)oRotatedBoundingBox[0][0], -(int)oRotatedBoundingBox[0][1],
+            (int)iDiagonal, (int)iDiagonal,
             NPPI_INTER_NN));
         //}
 
