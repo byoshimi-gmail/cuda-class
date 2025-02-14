@@ -179,10 +179,12 @@ int main(int argc, char *argv[])
             {(double)oDeviceSrc.width(), (double)oDeviceSrc.height()}};
 
         double oBoundingBox[2][2];
+        double oRotatedBoundingBox[2][2];
 
         // Maximal bounding box, at least for square case is 45 deg.
         // Better check would use sqrt(width^2 + height^2) as output width and height.
         NPP_CHECK_NPP(nppiGetRotateBound(oSrcSize, oBoundingBox, 45.0/*angle*/, 0, 0));
+        NPP_CHECK_NPP(nppiGetRotateBound(oSrcSize, oRotatedBoundingBox, angle, 0, 0));
 
         // allocate device image for the rotated image
         npp::ImageNPP_8u_C1 oDeviceDst(oBoundingBox[1][0] - oBoundingBox[0][0],
@@ -197,11 +199,15 @@ int main(int argc, char *argv[])
 
         // run the rotation
         //for (angle = 5; angle < 360; angle+=5) {
-        std::cout << "angle = " << angle << "  x, y offsets = " << -(int)oBoundingBox[0][0] << ", " << -(int)oBoundingBox[0][1] << "\n";
+        std::cout << "angle = " << angle << "\n";
+        std::cout << "output image x, y offsets = " << -(int)oBoundingBox[0][0] << ", " << -(int)oBoundingBox[0][1] << " - "
+                  << -(int)oBoundingBox[1][0] << ", " << -(int)oBoundingBox[1][1] << "\n";
+        std::cout << "rotated x, y offsets = " << -(int)oRotatedBoundingBox[0][0] << ", " << -(int)oRotatedBoundingBox[0][1] << " - "
+                  << -(int)oRotatedBoundingBox[1][0] << ", " << -(int)oRotatedBoundingBox[1][1] << "\n";
         NPP_CHECK_NPP(nppiRotate_8u_C1R(
             oDeviceSrc.data(), oSrcSizeSize, oDeviceSrc.pitch(), oSrcSize,
             oDeviceDst.data(), oDeviceDst.pitch(), oBoundingRect, angle,
-            0, 0, //-(int)oBoundingBox[0][0], -(int)oBoundingBox[0][1],
+            -(int)oRotatedBoundingBox[0][0], -(int)oRotatedBoundingBox[0][1],
             NPPI_INTER_NN));
         //}
 
