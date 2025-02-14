@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
         NPP_CHECK_NPP(nppiRotate_8u_C1R(
             oDeviceSrc.data(), oSrcSizeSize, oDeviceSrc.pitch(), oSrcSize,
             oDeviceDst.data(), oDeviceDst.pitch(), oBoundingRect, angle,
-            (int)iDiagonal, (int)iDiagonal,
+            0, 0,
             NPPI_INTER_NN));
         //}
 
