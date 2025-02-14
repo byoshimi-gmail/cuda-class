@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
 
         // Maximal bounding box, at least for square case is 45 deg.
         // Better check would use sqrt(width^2 + height^2) as output width and height.
-        NPP_CHECK_NPP(nppiGetRotateBound(oSrcSize, oBoundingBox, angle, 0, 0));
+        NPP_CHECK_NPP(nppiGetRotateBound(oSrcSize, oBoundingBox, 45.0/*angle*/, 0, 0));
 
         // allocate device image for the rotated image
         npp::ImageNPP_8u_C1 oDeviceDst(oBoundingBox[1][0] - oBoundingBox[0][0],
@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
         NPP_CHECK_NPP(nppiRotate_8u_C1R(
             oDeviceSrc.data(), oSrcSizeSize, oDeviceSrc.pitch(), oSrcSize,
             oDeviceDst.data(), oDeviceDst.pitch(), oBoundingRect, angle,
-            -(int)oBoundingBox[0][0], -(int)oBoundingBox[0][1],
+            0, 0, //-(int)oBoundingBox[0][0], -(int)oBoundingBox[0][1],
             NPPI_INTER_NN));
         //}
 
