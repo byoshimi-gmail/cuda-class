@@ -76,6 +76,7 @@ int main(int argc, char *argv[])
     {
         std::string sFilename;
         char *filePath;
+        float angleF = 45.0;
 
         findCudaDevice(argc, (const char **)argv);
 
@@ -87,6 +88,15 @@ int main(int argc, char *argv[])
         if (checkCmdLineFlag(argc, (const char **)argv, "input"))
         {
             getCmdLineArgumentString(argc, (const char **)argv, "input", &filePath);
+        }
+        else
+        {
+            filePath = sdkFindFilePath("Lena.pgm", argv[0]);
+        }
+
+        if (checkCmdLineFlag(argc, (const char **)argv, "angle"))
+        {
+            angleF = getCmdLineArgumentFloat(argc, (const char **)argv, "angle");
         }
         else
         {
@@ -163,7 +173,7 @@ int main(int argc, char *argv[])
 
         // Calculate the bounding box of the rotated image
 
-        double angle = 45.0; // Rotation angle in degrees
+        double angle = (double) angleF;
         double aBoundingBox[2][2] = {
             {0, 0},
             {(double)oDeviceSrc.width(), (double)oDeviceSrc.height()}};
@@ -187,7 +197,7 @@ int main(int argc, char *argv[])
 
         // run the rotation
         //for (angle = 5; angle < 360; angle+=5) {
-        angle = 15;
+        std::cout << "angle = " << angle << "  x, y offsets = " << -(int)oBoundingBox[0][0] << ", " << -(int)oBoundingBox[0][1] << "\n";
         NPP_CHECK_NPP(nppiRotate_8u_C1R(
             oDeviceSrc.data(), oSrcSizeSize, oDeviceSrc.pitch(), oSrcSize,
             oDeviceDst.data(), oDeviceDst.pitch(), oBoundingRect, angle,
