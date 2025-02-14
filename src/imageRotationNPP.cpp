@@ -186,13 +186,14 @@ int main(int argc, char *argv[])
         NppiSize oSrcOffsetSize = {(int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
 
         // run the rotation
-        for (angle = 5; angle < 360; angle+=5) {
-            NPP_CHECK_NPP(nppiRotate_8u_C1R(
-                oDeviceSrc.data(), oSrcSizeSize, oDeviceSrc.pitch(), oSrcSize,
-                oDeviceDst.data(), oDeviceDst.pitch(), oBoundingRect, angle,
-                -(int)oBoundingBox[0][0], -(int)oBoundingBox[0][1],
-                NPPI_INTER_NN));
-        }
+        //for (angle = 5; angle < 360; angle+=5) {
+        angle = 15;
+        NPP_CHECK_NPP(nppiRotate_8u_C1R(
+            oDeviceSrc.data(), oSrcSizeSize, oDeviceSrc.pitch(), oSrcSize,
+            oDeviceDst.data(), oDeviceDst.pitch(), oBoundingRect, angle,
+            -(int)oBoundingBox[0][0], -(int)oBoundingBox[0][1],
+            NPPI_INTER_NN));
+        //}
 
         // declare a host image for the result
         npp::ImageCPU_8u_C1 oHostDst(oDeviceDst.size());
