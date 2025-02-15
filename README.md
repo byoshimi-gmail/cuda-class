@@ -3,9 +3,9 @@
 ## Overview
 
 Took an existing, non-working example that *tried* to do image rotations and fixed it to rotate an image.  Above and beyond this, figured
-out how the translation of rotated images work to create a pretty pinwheel effect.
+out how the translation of rotated images works to create a pretty pinwheel effect.
 
-More complicated part (and you can see this from the github history) was the big puzzle about what getRotationBoundingBox() returned and how to use the offsets render the results correctly in the final image.  It turns out that the rotation point is **always** the top left corner of the image, which threw me off for a long time.
+More complicated part (and you can see this from the github history) was the big puzzle about what getRotationBoundingBox() returned and the offsets used in nppiRotate_8u_C1R() (also didn't help that nothing said nppi::loadImage() only understood 8-bit grey images.  Learned how to use the offsets render the results correctly in the final image.  It turns out that the rotation point is **always** the top left corner of the image, which threw me off for a long time.
 
 ## Code Organization
 
