@@ -39,6 +39,7 @@
 
 #include <string.h>
 #include <math.h>
+#include <cassert>
 #include <fstream>
 #include <iostream>
 
@@ -77,7 +78,8 @@ int main(int argc, char *argv[])
     {
         std::string sFilename;
         char *filePath;
-        float angleF = 45.0;
+        float angleF = 5.0;      // Starting rotation (can be negative).
+        float angleStepF = 12.0; // Add this many degrees when incrementing angleF.  Stop when angleF >360. Should be positive int.
 
         findCudaDevice(argc, (const char **)argv);
 
@@ -95,15 +97,6 @@ int main(int argc, char *argv[])
             filePath = sdkFindFilePath("Lena.pgm", argv[0]);
         }
 
-        if (checkCmdLineFlag(argc, (const char **)argv, "angle"))
-        {
-            angleF = getCmdLineArgumentFloat(argc, (const char **)argv, "angle");
-        }
-        else
-        {
-            filePath = sdkFindFilePath("Lena.pgm", argv[0]);
-        }
-
         if (filePath)
         {
             sFilename = filePath;
@@ -112,6 +105,18 @@ int main(int argc, char *argv[])
         {
             sFilename = "data/Lena-grey.pgm";
         }
+
+        if (checkCmdLineFlag(argc, (const char **)argv, "angle"))
+        {
+            angleF = getCmdLineArgumentFloat(argc, (const char **)argv, "angle");
+        }
+
+        if (checkCmdLineFlag(argc, (const char **)argv, "angleStep"))
+        {
+            angleStepF = getCmdLineArgumentFloat(argc, (const char **)argv, "angleStep");
+            assert(angleStepF > 0.0 && "angleStep must be greater than 0.0");
+        }
+        std::cout << "angle=" << angleF << " angleStep=" << angleStepF << "\n";
 
         // if we specify the filename at the command line, then we only test
         // sFilename[0].
@@ -196,7 +201,7 @@ int main(int argc, char *argv[])
         // The "center" we'll be spinning around is (iDiagonal, iDiagonal), the center of oDeviceDst.
         npp::ImageNPP_8u_C1 oDeviceDst(iDiagonal*2, iDiagonal*2);
 
-        NppiRect oBoundingRect = {0, 0, (int)iDiagonal, (int)iDiagonal};
+        NppiRect oBoundingRect = {0, 0, (int)iDiagonal*2, (int)iDiagonal*2};
 
         NppiSize oSrcSizeSize = {(int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
         NppiSize oSrcOffsetSize = {(int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
@@ -210,12 +215,13 @@ int main(int argc, char *argv[])
         double oRotatedWidthOffset = (iDiagonal - oRotatedWidth) / 2;
         double oRotatedHeightOffset = (iDiagonal - oRotatedHeight) / 2;
         // int rWidthPad = (int)(oDevice)
-        NPP_CHECK_NPP(nppiRotate_8u_C1R(
-            oDeviceSrc.data(), oSrcSizeSize, oDeviceSrc.pitch(), oSrcSize,
-            oDeviceDst.data(), oDeviceDst.pitch(), oBoundingRect, angle,
-            0, 0,
-            NPPI_INTER_NN));
-        //}
+        for (angle = angleF; angle < 360; angle += angleStepF) {
+            NPP_CHECK_NPP(nppiRotate_8u_C1R(
+                oDeviceSrc.data(), oSrcSizeSize, oDeviceSrc.pitch(), oSrcSize,
+                oDeviceDst.data(), oDeviceDst.pitch(), oBoundingRect, angle,
+                (int)iDiagonal, (int)iDiagonal,
+                NPPI_INTER_NN));
+        }
 
         // declare a host image for the result
         npp::ImageCPU_8u_C1 oHostDst(oDeviceDst.size());
