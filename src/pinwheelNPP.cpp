@@ -116,7 +116,6 @@ int main(int argc, char *argv[])
             angleStepF = getCmdLineArgumentFloat(argc, (const char **)argv, "angleStep");
             assert(angleStepF > 0.0 && "angleStep must be greater than 0.0");
         }
-        std::cout << "angle=" << angleF << " angleStep=" << angleStepF << "\n";
 
         // if we specify the filename at the command line, then we only test
         // sFilename[0].
@@ -162,7 +161,7 @@ int main(int argc, char *argv[])
             sResultFilename = outputFilePath;
         }
 
-        // NOTE: this code only works for 8-bit grey scale.  npp::loadImage() defined in
+        // NOTE: this code only works for 8-bit grey scale.  npp::loadImage() is defined in
         // Common/UtilNPP/ImageIO.h   It only support 8-bit grey decoding.
 
         // declare a host image object for an 8-bit grayscale image
@@ -172,50 +171,29 @@ int main(int argc, char *argv[])
         // i.e. upload host to device
         npp::ImageNPP_8u_C1 oDeviceSrc(oHostSrc);
 
-        // create struct with the ROI size
         NppiRect oSrcSize = {0, 0, (int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
-        NppiPoint oSrcOffset = {(int)oDeviceSrc.width(), (int)oDeviceSrc.height() };
-        NppiRect oSizeROI = {0, 0, (int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
 
         // Calculate the bounding box of the rotated image
 
-        double angle = (double) angleF;
         double aBoundingBox[2][2] = {
             {0, 0},
             {(double)oDeviceSrc.width(), (double)oDeviceSrc.height()}};
 
         double oBoundingBox[2][2];
-        double oRotatedBoundingBox[2][2];
 
-        // Maximal bounding box, at least for square case is 45 deg.
-        // Better check would use sqrt(width^2 + height^2) as output width and height.
+        // Src image diagonal length = sqrt(width^2 + height^2). Use 2X for output width and height.
+        // Allows us to cover a full circle with images.
         double iDiagonal = sqrt((double)(oDeviceSrc.width() * oDeviceSrc.width()) +
                                 (oDeviceSrc.height() * oDeviceSrc.height()));
-        std::cout << "diagonal = " << iDiagonal << "\n";
-       
-        NPP_CHECK_NPP(nppiGetRotateBound(oSrcSize, oRotatedBoundingBox, angle, 0, 0));
-        double oRotatedWidth = std::max(oRotatedBoundingBox[0][0] - oRotatedBoundingBox[1][0], oRotatedBoundingBox[1][0] - oRotatedBoundingBox[0][0]);
-        double oRotatedHeight = std::max(oRotatedBoundingBox[0][1] - oRotatedBoundingBox[1][1], oRotatedBoundingBox[1][1] - oRotatedBoundingBox[0][1]);
-
+    
         // allocate device image for the rotated image
         // The "center" we'll be spinning around is (iDiagonal, iDiagonal), the center of oDeviceDst.
         npp::ImageNPP_8u_C1 oDeviceDst(iDiagonal*2, iDiagonal*2);
 
         NppiRect oBoundingRect = {0, 0, (int)iDiagonal*2, (int)iDiagonal*2};
-
         NppiSize oSrcSizeSize = {(int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
-        NppiSize oSrcOffsetSize = {(int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
 
-        // run the rotation
-        //for (angle = 5; angle < 360; angle+=5) {
-        std::cout << "angle = " << angle << "\n";
-        std::cout << "rotated x, y offsets = " << -(int)oRotatedBoundingBox[0][0] << ", " << -(int)oRotatedBoundingBox[0][1] << " - "
-                  << -(int)oRotatedBoundingBox[1][0] << ", " << -(int)oRotatedBoundingBox[1][1] << "\n";
-
-        double oRotatedWidthOffset = (iDiagonal - oRotatedWidth) / 2;
-        double oRotatedHeightOffset = (iDiagonal - oRotatedHeight) / 2;
-        // int rWidthPad = (int)(oDevice)
-        for (angle = angleF; angle < 360; angle += angleStepF) {
+        for (double angle = angleF; angle < 360; angle += angleStepF) {
             NPP_CHECK_NPP(nppiRotate_8u_C1R(
                 oDeviceSrc.data(), oSrcSizeSize, oDeviceSrc.pitch(), oSrcSize,
                 oDeviceDst.data(), oDeviceDst.pitch(), oBoundingRect, angle,

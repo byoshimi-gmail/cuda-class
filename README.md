@@ -2,12 +2,15 @@
 
 ## Overview
 
-This project demonstrates the use of NVIDIA Performance Primitives (NPP) library with CUDA to perform image rotation. The goal is to utilize GPU acceleration to efficiently rotate a given image by a specified angle, leveraging the computational power of modern GPUs. The project is a part of the CUDA at Scale for the Enterprise course and serves as a template for understanding how to implement basic image processing operations using CUDA and NPP.
+Took an existing, non-working example that *tried* to do image rotations and fixed it to rotate an image.  Above and beyond this, figured
+out how the translation of rotated images work to create a pretty pinwheel effect.
+
+More complicated part (and you can see this from the github history) was the big puzzle about what getRotationBoundingBox() returned and how to use the offsets render the results correctly in the final image.  It turns out that the rotation point is **always** the top left corner of the image, which threw me off for a long time.
 
 ## Code Organization
 
 ```bin/```
-This folder should hold all binary/executable code that is built automatically or manually. Executable code should have use the .exe extension or programming language-specific extension.
+This folder should hold all binary/executable code that is built automatically or manually. The executable is pinwheelNPP.
 
 ```data/```
 This folder should hold all example data in any format. If the original data is rather large or can be brought in via scripts, this can be left blank in the respository, so that it doesn't require major downloads when all that is desired is the code/structure.
@@ -71,7 +74,7 @@ To build/examine all the samples at once, the complete solution files should be 
 ### Linux
 The Linux samples are built using makefiles. To use the makefiles, change the current directory to the sample directory you wish to build, and run make:
 ```
-$ cd <sample_dir>
+$ cd cuda-class
 $ make
 ```
 The samples makefiles can take advantage of certain options:
@@ -98,19 +101,30 @@ The samples makefiles can take advantage of certain options:
 After building the project, you can run the program using the following command:
 
 ```bash
-Copy code
-make run
+./bin/pinwheelNPP
 ```
+or
+```bash
+- Copy code
+./run.sh 
+```
+**The ./run.sh example includes other command-line args for you to play with.**
 
-This command will execute the compiled binary, rotating the input image (Lena.png) by 45 degrees, and save the result as Lena_rotated.png in the data/ directory.
+This command will execute the compiled binary, generating a pinwheel of the (data/Lena.p) starting at a 5 degree rotation from a position on lower right of the image
+and maing 12 degree additional rotation until completing a full 360 (maybe a little less) circuit. The result is saved in Lena_rotated.png in the data/ directory.
 
 If you wish to run the binary directly with custom input/output files, you can use:
 
 ```bash
 - Copy code
-./bin/imageRotationNPP --input data/Lena.png --output data/Lena_rotated.png
+./bin/pinwheelNPP -input=data/Lena.pgm -output=data/Lena_rotated.pgm
 ```
 
+To play around with different starting angles and rotation increments use:
+```bash
+- Copy code
+./bin/pinwheelNPP -input=data/Lena.pgm -angle=15 -angleStep=15 -output=data/Lena_rotated.pgm
+```
 - Cleaning Up
 To clean up the compiled binaries and other generated files, run:
 
@@ -121,3 +135,5 @@ make clean
 ```
 
 This will remove all files in the bin/ directory.
+
+You'll need to manually remove any files you create either in the data/ directory or with the `-output=` argument.
